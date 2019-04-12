@@ -2,6 +2,8 @@ package xiaomipush
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -98,7 +100,8 @@ func (m *Message) AddExtra(key, value string) *Message {
 func (m *Message) JSON() []byte {
 	bytes, err := json.Marshal(m)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		return nil
 	}
 	return bytes
 }
@@ -216,7 +219,8 @@ func (tm *TargetedMessage) SetTarget(target string) *TargetedMessage {
 func (tm *TargetedMessage) JSON() []byte {
 	bytes, err := json.Marshal(tm)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err.Error())
+		return nil
 	}
 	return bytes
 }

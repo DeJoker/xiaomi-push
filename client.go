@@ -48,7 +48,7 @@ func (m *MiPush) Send(ctx context.Context, msg *Message, regID string) (*SendRes
 // regIds的个数不得超过1000个。
 func (m *MiPush) SendToList(ctx context.Context, msg *Message, regIDList []string) (*SendResult, error) {
 	if len(regIDList) == 0 || len(regIDList) > 1000 {
-		panic("wrong number regIDList")
+		return nil, errors.New("wrong number regIDList")
 	}
 	return m.Send(ctx, msg, strings.Join(regIDList, ","))
 }
@@ -74,7 +74,7 @@ func (m *MiPush) SendTargetMessageList(ctx context.Context, msgList []*TargetedM
 	} else if msgList[0].targetType == TargetTypeAccount {
 		bytes, err = m.doPost(ctx, m.host+MultiMessagesUserAccountURL, params)
 	} else {
-		panic("bad targetType")
+		return nil, errors.New("bad targetType")
 	}
 
 	if err != nil {
@@ -107,7 +107,7 @@ func (m *MiPush) SendToAlias(ctx context.Context, msg *Message, alias string) (*
 // 元素的个数不得超过1000个。
 func (m *MiPush) SendToAliasList(ctx context.Context, msg *Message, aliasList []string) (*SendResult, error) {
 	if len(aliasList) == 0 || len(aliasList) > 1000 {
-		panic("wrong number aliasList")
+		return nil, errors.New("wrong number aliasList")
 	}
 	return m.SendToAlias(ctx, msg, strings.Join(aliasList, ","))
 }
@@ -131,7 +131,7 @@ func (m *MiPush) SendToUserAccount(ctx context.Context, msg *Message, userAccoun
 // 元素的个数不得超过1000个。
 func (m *MiPush) SendToUserAccountList(ctx context.Context, msg *Message, accountList []string) (*SendResult, error) {
 	if len(accountList) == 0 || len(accountList) > 1000 {
-		panic("wrong number accountList")
+		return nil, errors.New("wrong number accountList")
 	}
 	return m.SendToUserAccount(ctx, msg, strings.Join(accountList, ","))
 }
@@ -191,7 +191,7 @@ const (
 // 例如：topics的列表元素是[A, B, C, D]，则并集结果是A∪B∪C∪D，交集的结果是A∩B∩C∩D，差集的结果是A-B-C-D
 func (m *MiPush) MultiTopicBroadcast(ctx context.Context, msg *Message, topics []string, topicOP TopicOP) (*SendResult, error) {
 	if len(topics) > 5 || len(topics) == 0 {
-		panic("topics size invalid")
+		return nil, errors.New("topics size invalid")
 	}
 	if len(topics) == 1 {
 		return m.Broadcast(ctx, msg, topics[0])
@@ -465,7 +465,8 @@ func (m *MiPush) assembleTargetMessageListParams(msgList []*TargetedMessage) url
 	}
 	bytes, err := json.Marshal(messages)
 	if err != nil {
-		panic(err)
+		fmt.Println("json marshal err: " + err.Error())
+		return nil
 	}
 	form.Add("messages", string(bytes))
 	form.Add("time_to_send", strconv.FormatInt(msgList[0].message.TimeToSend, 10))
@@ -617,7 +618,7 @@ func (m *MiPush) doPost(ctx context.Context, url string, form url.Values) ([]byt
 	var err error
 	req, err = http.NewRequest("POST", url, strings.NewReader(form.Encode()))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	req.Header.Set("Authorization", "key="+m.appSecret)
@@ -661,7 +662,7 @@ func (m *MiPush) doGet(ctx context.Context, url string, params string) ([]byte, 
 	var err error
 	req, err = http.NewRequest("GET", url+params, nil)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
 	req.Header.Set("Authorization", "key="+m.appSecret)
@@ -669,7 +670,7 @@ func (m *MiPush) doGet(ctx context.Context, url string, params string) ([]byte, 
 	client := &http.Client{}
 	res, err = ctxhttp.Do(ctx, client, req)
 	if res.Body == nil {
-		panic("xiaomi response is nil")
+		return nil, errors.New("xiaomi response is nil")
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
