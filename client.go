@@ -623,34 +623,35 @@ func (m *MiPush) doPost(ctx context.Context, url string, form url.Values) ([]byt
 	req.Header.Set("Authorization", "key="+m.appSecret)
 	client := &http.Client{}
 	tryTime := 0
-tryAgain:
-	res, err = ctxhttp.Do(ctx, client, req)
-	if err != nil {
-		fmt.Println("xiaomi push post err:", err, tryTime)
-		select {
-		case <-ctx.Done():
+
+	for tryTime < PostRetryTimes {
+		res, err = ctxhttp.Do(ctx, client, req)
+		if err != nil {
+			fmt.Println("xiaomi push post err:", err, tryTime)
+			select {
+			case <-ctx.Done():
+				return nil, err
+			default:
+			}
+			tryTime += 1
+			if tryTime < PostRetryTimes {
+				continue
+			}
 			return nil, err
-		default:
 		}
-		tryTime += 1
-		if tryTime < PostRetryTimes {
-			goto tryAgain
+
+		defer res.Body.Close()
+		fmt.Println("xiaomi push res.StatusCode=", res.StatusCode)
+		if res.StatusCode != http.StatusOK {
+			return nil, errors.New("network error")
 		}
-		return nil, err
+		result, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
 	}
-	if res.Body == nil {
-		panic("xiaomi response is nil")
-	}
-	defer res.Body.Close()
-	fmt.Println("res.StatusCode=", res.StatusCode)
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("network error")
-	}
-	result, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return []byte("unknow error"), nil
 }
 
 func (m *MiPush) doGet(ctx context.Context, url string, params string) ([]byte, error) {
