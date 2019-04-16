@@ -97,6 +97,12 @@ func (m *Message) AddExtra(key, value string) *Message {
 	return m
 }
 
+// 定义自定义字段
+func (m *Message) SetExtra(extras map[string]string) *Message {
+	m.Extra = extras
+	return m
+}
+
 func (m *Message) JSON() []byte {
 	bytes, err := json.Marshal(m)
 	if err != nil {
