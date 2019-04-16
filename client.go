@@ -30,23 +30,24 @@ func NewClient(appSecret string, packageName []string) *MiPush {
 
 //----------------------------------------Sender----------------------------------------//
 // 根据registrationId，发送消息到指定设备上
-func (m *MiPush) Send(ctx context.Context, msg *Message, regID string) (*SendResult, error) {
+func (m *MiPush) Send(ctx context.Context, msg *Message, regID string) ([]byte, error) {
 	params := m.assembleSendParams(msg, regID)
 	bytes, err := m.doPost(ctx, m.host+RegURL, params)
 	if err != nil {
 		return nil, err
 	}
-	var result SendResult
-	err = json.Unmarshal(bytes, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
+	return bytes, nil
+	//var result SendResult
+	//err = json.Unmarshal(bytes, &result)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return &result, nil
 }
 
 // 根据regIds，发送消息到指定的一组设备上
 // regIds的个数不得超过1000个。
-func (m *MiPush) SendToList(ctx context.Context, msg *Message, regIDList []string) (*SendResult, error) {
+func (m *MiPush) SendToList(ctx context.Context, msg *Message, regIDList []string) ([]byte, error) {
 	if len(regIDList) == 0 || len(regIDList) > 1000 {
 		return nil, errors.New("wrong number regIDList")
 	}
@@ -57,7 +58,7 @@ func (m *MiPush) SendToList(ctx context.Context, msg *Message, regIDList []strin
 // 不支持在一个调用中同时给regid和alias发送消息。
 // 如果是定时消息, 所有消息的time_to_send必须相同
 // 消息必须设置packagename, 见client_test TestMiPush_SendTargetMessageList
-func (m *MiPush) SendTargetMessageList(ctx context.Context, msgList []*TargetedMessage) (*SendResult, error) {
+func (m *MiPush) SendTargetMessageList(ctx context.Context, msgList []*TargetedMessage) ([]byte, error) {
 	if len(msgList) == 0 {
 		return nil, errors.New("empty msg")
 	}
@@ -80,12 +81,13 @@ func (m *MiPush) SendTargetMessageList(ctx context.Context, msgList []*TargetedM
 	if err != nil {
 		return nil, err
 	}
-	var result SendResult
-	err = json.Unmarshal(bytes, &result)
-	if err != nil {
-		return nil, err
-	}
-	return &result, nil
+	return bytes, nil
+	//var result SendResult
+	//err = json.Unmarshal(bytes, &result)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return &result, nil
 }
 
 // 根据alias，发送消息到指定设备上
