@@ -91,6 +91,13 @@ func (m *Message) SetCallback(callbackURL string) *Message {
 	return m
 }
 
+// 小米推送服务器每隔1s将已送达或已点击的消息ID和对应设备的regid或alias通过调用第三方http接口传给开发者。
+func (m *Message) SetDeliveryCallback(callbackURL string) *Message {
+	m.Extra["callback"] = callbackURL
+	m.Extra["callback.type"] = "1" // 1:送达回执, 2:点击回执, 3:送达和点击回执
+	return m
+}
+
 // 添加自定义字段, 客户端使用
 func (m *Message) AddExtra(key, value string) *Message {
 	m.Extra[key] = value
