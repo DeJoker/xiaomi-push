@@ -644,7 +644,7 @@ func (m *MiPush) doPost(ctx context.Context, url string, form url.Values) ([]byt
 		}
 
 		defer res.Body.Close()
-		fmt.Println("xiaomi push res.StatusCode=", res.StatusCode)
+		// fmt.Println("xiaomi push res.StatusCode=", res.StatusCode)
 		if res.StatusCode != http.StatusOK {
 			return nil, errors.New("network error")
 		}
