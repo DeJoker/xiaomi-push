@@ -65,7 +65,7 @@ func TestMiPush_SendToList(t *testing.T) {
 }
 
 func TestMiPush_SendTargetMessageList(t *testing.T) {
-	msgList := []*TargetedMessage{NewTargetedMessage(msg1.SetRestrictedPackageName(client.packageName), regID1, TargetTypeRegID), NewTargetedMessage(msg2.SetRestrictedPackageName(client.packageName), regID2, TargetTypeRegID)}
+	msgList := []*TargetedMessage{NewTargetedMessage(msg1.SetRestrictedPackageName(client.PackageNames), regID1, TargetTypeRegID), NewTargetedMessage(msg2.SetRestrictedPackageName(client.PackageNames), regID2, TargetTypeRegID)}
 	result, err := client.SendTargetMessageList(context.TODO(), msgList)
 	if err != nil {
 		t.Errorf("TestMiPush_SendTargetMessageList failed :%v\n", err)

@@ -9,22 +9,21 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 	"golang.org/x/net/context/ctxhttp"
 )
 
 type MiPush struct {
-	packageName []string
-	host        string
-	appSecret   string
+	PackageNames []string
+	AppSecret   string
 }
 
 func NewClient(appSecret string, packageName []string) *MiPush {
 	return &MiPush{
-		packageName: packageName,
-		host:        ProductionHost,
-		appSecret:   appSecret,
+		PackageNames: packageName,
+		AppSecret:   appSecret,
 	}
 }
 
@@ -32,7 +31,7 @@ func NewClient(appSecret string, packageName []string) *MiPush {
 // 根据registrationId，发送消息到指定设备上
 func (m *MiPush) Send(ctx context.Context, msg *Message, regID string) ([]byte, error) {
 	params := m.assembleSendParams(msg, regID)
-	bytes, err := m.doPost(ctx, m.host+RegURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+RegURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +68,11 @@ func (m *MiPush) SendTargetMessageList(ctx context.Context, msgList []*TargetedM
 	var bytes []byte
 	var err error
 	if msgList[0].targetType == TargetTypeRegID {
-		bytes, err = m.doPost(ctx, m.host+MultiMessagesRegIDURL, params)
+		bytes, err = m.doPost(ctx, ProductionHost+MultiMessagesRegIDURL, params)
 	} else if msgList[0].targetType == TargetTypeReAlias {
-		bytes, err = m.doPost(ctx, m.host+MultiMessagesAliasURL, params)
+		bytes, err = m.doPost(ctx, ProductionHost+MultiMessagesAliasURL, params)
 	} else if msgList[0].targetType == TargetTypeAccount {
-		bytes, err = m.doPost(ctx, m.host+MultiMessagesUserAccountURL, params)
+		bytes, err = m.doPost(ctx, ProductionHost+MultiMessagesUserAccountURL, params)
 	} else {
 		return nil, errors.New("bad targetType")
 	}
@@ -93,7 +92,7 @@ func (m *MiPush) SendTargetMessageList(ctx context.Context, msgList []*TargetedM
 // 根据alias，发送消息到指定设备上
 func (m *MiPush) SendToAlias(ctx context.Context, msg *Message, alias string) (*SendResult, error) {
 	params := m.assembleSendToAlisaParams(msg, alias)
-	bytes, err := m.doPost(ctx, m.host+MessageAlisaURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+MessageAlisaURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +116,7 @@ func (m *MiPush) SendToAliasList(ctx context.Context, msg *Message, aliasList []
 // 根据account，发送消息到指定account上
 func (m *MiPush) SendToUserAccount(ctx context.Context, msg *Message, userAccount string) (*SendResult, error) {
 	params := m.assembleSendToUserAccountParams(msg, userAccount)
-	bytes, err := m.doPost(ctx, m.host+MessageUserAccountURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+MessageUserAccountURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +142,10 @@ func (m *MiPush) Broadcast(ctx context.Context, msg *Message, topic string) (*Se
 	params := m.assembleBroadcastParams(msg, topic)
 	var bytes []byte
 	var err error
-	if len(m.packageName) > 1 {
-		bytes, err = m.doPost(ctx, m.host+MultiPackageNameMessageMultiTopicURL, params)
+	if len(m.PackageNames) > 1 {
+		bytes, err = m.doPost(ctx, ProductionHost+MultiPackageNameMessageMultiTopicURL, params)
 	} else {
-		bytes, err = m.doPost(ctx, m.host+MessageMultiTopicURL, params)
+		bytes, err = m.doPost(ctx, ProductionHost+MessageMultiTopicURL, params)
 	}
 	if err != nil {
 		return nil, err
@@ -164,10 +163,10 @@ func (m *MiPush) BroadcastAll(ctx context.Context, msg *Message) (*SendResult, e
 	params := m.assembleBroadcastAllParams(msg)
 	var bytes []byte
 	var err error
-	if len(m.packageName) > 1 {
-		bytes, err = m.doPost(ctx, m.host+MultiPackageNameMessageAllURL, params)
+	if len(m.PackageNames) > 1 {
+		bytes, err = m.doPost(ctx, ProductionHost+MultiPackageNameMessageAllURL, params)
 	} else {
-		bytes, err = m.doPost(ctx, m.host+MessageAllURL, params)
+		bytes, err = m.doPost(ctx, ProductionHost+MessageAllURL, params)
 	}
 	if err != nil {
 		return nil, err
@@ -199,7 +198,7 @@ func (m *MiPush) MultiTopicBroadcast(ctx context.Context, msg *Message, topics [
 		return m.Broadcast(ctx, msg, topics[0])
 	}
 	params := m.assembleMultiTopicBroadcastParams(msg, topics, topicOP)
-	bytes, err := m.doPost(ctx, m.host+MultiTopicURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+MultiTopicURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +214,7 @@ func (m *MiPush) MultiTopicBroadcast(ctx context.Context, msg *Message, topics [
 // result.code = 0 为任务存在, 否则不存在
 func (m *MiPush) CheckScheduleJobExist(ctx context.Context, msgID string) (*Result, error) {
 	params := m.assembleCheckScheduleJobParams(msgID)
-	bytes, err := m.doPost(ctx, m.host+ScheduleJobExistURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+ScheduleJobExistURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +229,7 @@ func (m *MiPush) CheckScheduleJobExist(ctx context.Context, msgID string) (*Resu
 // 删除指定的定时消息
 func (m *MiPush) DeleteScheduleJob(ctx context.Context, msgID string) (*Result, error) {
 	params := m.assembleDeleteScheduleJobParams(msgID)
-	bytes, err := m.doPost(ctx, m.host+ScheduleJobDeleteURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+ScheduleJobDeleteURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +244,7 @@ func (m *MiPush) DeleteScheduleJob(ctx context.Context, msgID string) (*Result, 
 // 删除指定的定时消息
 func (m *MiPush) DeleteScheduleJobByJobKey(ctx context.Context, jobKey string) (*Result, error) {
 	params := m.assembleDeleteScheduleJobByJobKeyParams(jobKey)
-	bytes, err := m.doPost(ctx, m.host+ScheduleJobDeleteByJobKeyURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+ScheduleJobDeleteByJobKeyURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -259,12 +258,12 @@ func (m *MiPush) DeleteScheduleJobByJobKey(ctx context.Context, jobKey string) (
 
 //----------------------------------------Stats----------------------------------------//
 // 获取指定日期范围内的日统计数据（如果日期范围包含今日，则今日数据为从今天00：00开始到现在的累计量)。
-// packageName:
+// PackageName:
 // Android设备，传入App的包名
 // IOS设备，传入App的Bundle Id
-func (m *MiPush) Stats(ctx context.Context, start, end, packageName string) (*StatsResult, error) {
-	params := m.assembleStatsParams(start, end, packageName)
-	bytes, err := m.doGet(ctx, m.host+StatsURL, params)
+func (m *MiPush) Stats(ctx context.Context, start, end, PackageName string) (*StatsResult, error) {
+	params := m.assembleStatsParams(start, end, PackageName)
+	bytes, err := m.doGet(ctx, ProductionHost+StatsURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +279,7 @@ func (m *MiPush) Stats(ctx context.Context, start, end, packageName string) (*St
 // 获取指定ID的消息状态
 func (m *MiPush) GetMessageStatusByMsgID(ctx context.Context, msgID string) (*SingleStatusResult, error) {
 	params := m.assembleStatusParams(msgID)
-	bytes, err := m.doGet(ctx, m.host+MessageStatusURL, params)
+	bytes, err := m.doGet(ctx, ProductionHost+MessageStatusURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +294,7 @@ func (m *MiPush) GetMessageStatusByMsgID(ctx context.Context, msgID string) (*Si
 // 获取某个时间间隔内所有消息的状态。
 func (m *MiPush) GetMessageStatusByJobKey(ctx context.Context, jobKey string) (*BatchStatusResult, error) {
 	params := m.assembleStatusByJobKeyParams(jobKey)
-	bytes, err := m.doGet(ctx, m.host+MessagesStatusURL, params)
+	bytes, err := m.doGet(ctx, ProductionHost+MessagesStatusURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +309,7 @@ func (m *MiPush) GetMessageStatusByJobKey(ctx context.Context, jobKey string) (*
 // 获取某个时间间隔内所有消息的状态。
 func (m *MiPush) GetMessageStatusPeriod(ctx context.Context, beginTime, endTime int64) (*BatchStatusResult, error) {
 	params := m.assembleStatusPeriodParams(beginTime, endTime)
-	bytes, err := m.doGet(ctx, m.host+MessagesStatusURL, params)
+	bytes, err := m.doGet(ctx, ProductionHost+MessagesStatusURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +326,7 @@ func (m *MiPush) GetMessageStatusPeriod(ctx context.Context, beginTime, endTime 
 // 给某个regid订阅标签
 func (m *MiPush) SubscribeTopicForRegID(ctx context.Context, regID, topic, category string) (*Result, error) {
 	params := m.assembleSubscribeTopicForRegIDParams(regID, topic, category)
-	bytes, err := m.doPost(ctx, m.host+TopicSubscribeURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+TopicSubscribeURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +346,7 @@ func (m *MiPush) SubscribeTopicForRegIDList(ctx context.Context, regIDList []str
 // 取消某个regid的标签。
 func (m *MiPush) UnSubscribeTopicForRegID(ctx context.Context, regID, topic, category string) (*Result, error) {
 	params := m.assembleUnSubscribeTopicForRegIDParams(regID, topic, category)
-	bytes, err := m.doPost(ctx, m.host+TopicUnSubscribeURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+TopicUnSubscribeURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +366,7 @@ func (m *MiPush) UnSubscribeTopicForRegIDList(ctx context.Context, regIDList []s
 // 给一组alias列表订阅标签
 func (m *MiPush) SubscribeTopicByAlias(ctx context.Context, aliases []string, topic, category string) (*Result, error) {
 	params := m.assembleSubscribeTopicByAliasParams(aliases, topic, category)
-	bytes, err := m.doPost(ctx, m.host+TopicSubscribeByAliasURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+TopicSubscribeByAliasURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +381,7 @@ func (m *MiPush) SubscribeTopicByAlias(ctx context.Context, aliases []string, to
 // 取消一组alias列表的标签
 func (m *MiPush) UnSubscribeTopicByAlias(ctx context.Context, aliases []string, topic, category string) (*Result, error) {
 	params := m.assembleUnSubscribeTopicByAliasParams(aliases, topic, category)
-	bytes, err := m.doPost(ctx, m.host+TopicUnSubscribeByAliasURL, params)
+	bytes, err := m.doPost(ctx, ProductionHost+TopicUnSubscribeByAliasURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -418,7 +417,7 @@ func (m *MiPush) GetInvalidRegIDs(ctx context.Context) (*InvalidRegIDsResult, er
 // 获取一个应用的某个用户目前设置的所有Alias
 func (m *MiPush) GetAliasesOfRegID(ctx context.Context, regID string) (*AliasesOfRegIDResult, error) {
 	params := m.assembleGetAliasesOfParams(regID)
-	bytes, err := m.doGet(ctx, m.host+AliasAllURL, params)
+	bytes, err := m.doGet(ctx, ProductionHost+AliasAllURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +432,7 @@ func (m *MiPush) GetAliasesOfRegID(ctx context.Context, regID string) (*AliasesO
 // 	获取一个应用的某个用户的目前订阅的所有Topic
 func (m *MiPush) GetTopicsOfRegID(ctx context.Context, regID string) (*TopicsOfRegIDResult, error) {
 	params := m.assembleGetTopicsOfParams(regID)
-	bytes, err := m.doGet(ctx, m.host+TopicsAllURL, params)
+	bytes, err := m.doGet(ctx, ProductionHost+TopicsAllURL, params)
 	if err != nil {
 		return nil, err
 	}
@@ -523,11 +522,11 @@ func (m *MiPush) assembleDeleteScheduleJobByJobKeyParams(jobKey string) url.Valu
 	return form
 }
 
-func (m *MiPush) assembleStatsParams(start, end, packageName string) string {
+func (m *MiPush) assembleStatsParams(start, end, PackageName string) string {
 	form := url.Values{}
 	form.Add("start_date", start)
 	form.Add("end_date", end)
-	form.Add("restricted_package_name", packageName)
+	form.Add("restricted_package_name", PackageName)
 	return "?" + form.Encode()
 }
 
@@ -554,7 +553,7 @@ func (m *MiPush) assembleSubscribeTopicForRegIDParams(regID, topic, category str
 	form := url.Values{}
 	form.Add("registration_id", regID)
 	form.Add("topic", topic)
-	form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	if category != "" {
 		form.Add("category", category)
 	}
@@ -565,7 +564,7 @@ func (m *MiPush) assembleUnSubscribeTopicForRegIDParams(regID, topic, category s
 	form := url.Values{}
 	form.Add("registration_id", regID)
 	form.Add("topic", topic)
-	form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	if category != "" {
 		form.Add("category", category)
 	}
@@ -576,7 +575,7 @@ func (m *MiPush) assembleSubscribeTopicByAliasParams(aliases []string, topic, ca
 	form := url.Values{}
 	form.Add("aliases", strings.Join(aliases, ","))
 	form.Add("topic", topic)
-	form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	if category != "" {
 		form.Add("category", category)
 	}
@@ -587,7 +586,7 @@ func (m *MiPush) assembleUnSubscribeTopicByAliasParams(aliases []string, topic, 
 	form := url.Values{}
 	form.Add("aliases", strings.Join(aliases, ","))
 	form.Add("topic", topic)
-	form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	if category != "" {
 		form.Add("category", category)
 	}
@@ -601,14 +600,27 @@ func (m *MiPush) assembleGetInvalidRegIDsParams() string {
 
 func (m *MiPush) assembleGetAliasesOfParams(regID string) string {
 	form := url.Values{}
-	form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	form.Add("registration_id", regID)
 	return "?" + form.Encode()
 }
 
+
+
+
+// http base
+
+var (
+	httpclient = &http.Client{
+		Timeout : time.Second * 60,
+	}
+)
+
+
+
 func (m *MiPush) assembleGetTopicsOfParams(regID string) string {
 	form := url.Values{}
-	form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	form.Add("registration_id", regID)
 	return "?" + form.Encode()
 }
@@ -623,12 +635,11 @@ func (m *MiPush) doPost(ctx context.Context, url string, form url.Values) ([]byt
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
-	req.Header.Set("Authorization", "key="+m.appSecret)
-	client := &http.Client{}
+	req.Header.Set("Authorization", "key="+m.AppSecret)
 	tryTime := 0
 
 	for tryTime < PostRetryTimes {
-		res, err = ctxhttp.Do(ctx, client, req)
+		res, err = ctxhttp.Do(ctx, httpclient, req)
 		if err != nil {
 			fmt.Println("xiaomi push post err:", err, tryTime)
 			select {
@@ -667,10 +678,9 @@ func (m *MiPush) doGet(ctx context.Context, url string, params string) ([]byte, 
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
-	req.Header.Set("Authorization", "key="+m.appSecret)
+	req.Header.Set("Authorization", "key="+m.AppSecret)
 
-	client := &http.Client{}
-	res, err = ctxhttp.Do(ctx, client, req)
+	res, err = ctxhttp.Do(ctx, httpclient, req)
 	if res.Body == nil {
 		return nil, errors.New("xiaomi response is nil")
 	}
@@ -687,8 +697,8 @@ func (m *MiPush) doGet(ctx context.Context, url string, params string) ([]byte, 
 
 func (m *MiPush) defaultForm(msg *Message) url.Values {
 	form := url.Values{}
-	if len(m.packageName) > 0 {
-		form.Add("restricted_package_name", strings.Join(m.packageName, ","))
+	if len(m.PackageNames) > 0 {
+		form.Add("restricted_package_name", strings.Join(m.PackageNames, ","))
 	}
 	if msg.TimeToLive > 0 {
 		form.Add("time_to_live", strconv.FormatInt(msg.TimeToLive, 10))
