@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"golang.org/x/net/context/ctxhttp"
 )
 
@@ -655,11 +655,11 @@ func (m *MiPush) doPost(ctx context.Context, url string, form url.Values) ([]byt
 		}
 
 		defer res.Body.Close()
-		// fmt.Println("xiaomi push res.StatusCode=", res.StatusCode)
-		if res.StatusCode != http.StatusOK {
-			return nil, errors.New("network error")
-		}
+
 		result, err = ioutil.ReadAll(res.Body)
+		if res.StatusCode != http.StatusOK {
+			return result, errors.New("network error, http code:"+strconv.Itoa(res.StatusCode))
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -685,10 +685,11 @@ func (m *MiPush) doGet(ctx context.Context, url string, params string) ([]byte, 
 		return nil, errors.New("xiaomi response is nil")
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("network error")
-	}
+
 	result, err = ioutil.ReadAll(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return result, errors.New("network error, http code:"+strconv.Itoa(res.StatusCode))
+	}
 	if err != nil {
 		return nil, err
 	}

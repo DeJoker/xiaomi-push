@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 var packageName string = "sbkssbkssbkssbkssbkssbkssbkssbks"
@@ -31,7 +31,7 @@ func TestMiPush_Send(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestMiPush_Send failed :%v\n", err)
 	}
-	t.Logf("result=%#v\n", result)
+	t.Logf("result=%+v\n", string(result))
 }
 
 func TestMiPush_SendWithTimeout(t *testing.T) {
@@ -41,7 +41,7 @@ func TestMiPush_SendWithTimeout(t *testing.T) {
 	if err == nil {
 		t.Errorf("TestMiPush_Send failed :%v\n", err)
 	} else {
-		t.Logf("err=%v\n", err)
+		t.Logf("err=%+v\n", err)
 	}
 }
 
