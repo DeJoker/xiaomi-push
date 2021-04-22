@@ -98,6 +98,13 @@ func (m *Message) SetDeliveryCallback(callbackURL string) *Message {
 	return m
 }
 
+func (m *Message) SetLargeIconUrl(iconURL string) *Message {
+	m.Extra["notification_style_type"] = "1"
+	m.Extra["notification_large_icon_uri"] = iconURL
+	return m
+}
+
+
 // 添加自定义字段, 客户端使用
 func (m *Message) AddExtra(key, value string) *Message {
 	m.Extra[key] = value

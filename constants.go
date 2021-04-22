@@ -20,6 +20,7 @@ const (
 	ScheduleJobDeleteURL                 = "/v2/schedule_job/delete"          // 删除指定的定时消息。
 	ScheduleJobDeleteByJobKeyURL         = "/v3/schedule_job/delete"          // 删除指定的定时消息。
 
+	UploadIconURL                        = "/media/upload/image"              // 上传large icon
 )
 
 const (
