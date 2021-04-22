@@ -735,12 +735,22 @@ func (m *MiPush) defaultForm(msg *Message) url.Values {
 	return form
 }
 
-func (m *MiPush) UploadLargeIcon(filename string) string {
+func (m *MiPush) UploadLargeIcon(filename string) (*UploadResult, error) {
 	p := make(map[string]string)
 	p["is_global"] = "false"
 	p["is_icon"] = "true"
 
-	return m.commonUploadRealFile(filename, ProductionHost+UploadIconURL, p)
+	str := m.commonUploadRealFile(filename, ProductionHost+UploadIconURL, p)
+	var result UploadResult
+	err := json.Unmarshal([]byte(str), &result)
+	if err != nil {
+		return nil, err
+	}
+	if result.Code != 0 {
+		return nil, errors.New(result.Reason)
+	}
+	return &result, nil
+
 }
 
 func (m *MiPush) commonUploadRealFile(filename, url string, params map[string]string) string {
@@ -786,7 +796,6 @@ func constructFormFile(writer *multipart.Writer, filename string) error {
 
 	//推断Content-Type
 	contentType := http.DetectContentType(buffer.Bytes())
-	fmt.Printf("type: %s\n", contentType)
 
 	waitToWriteContent, _ := createFormFile(writer, contentType, "file", filename)
 	//写入文件内容
@@ -817,7 +826,6 @@ func UrlDecode(body []byte) string {
 	content = strings.Replace(content, "\\u003e", ">", -1)
 	content = strings.Replace(content, "\\u0026", "&", -1)
 
-	fmt.Println(content)
 	return content
 }
 

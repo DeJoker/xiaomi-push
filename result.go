@@ -16,6 +16,14 @@ type SendResult struct {
 	} `json:"data,omitempty"`
 }
 
+type UploadResult struct {
+	Result
+	Data struct {
+		Sha1 string `json:"sha1,omitempty"`
+		IconUrl string `json:"icon_url,omitempty"`
+	} `json:"data,omitempty"`
+}
+
 type StatsResult struct {
 	Result
 	Data struct {

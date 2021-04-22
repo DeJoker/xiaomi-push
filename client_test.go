@@ -1,11 +1,66 @@
 package xiaomipush
 
 import (
+	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
 	"context"
 )
+
+
+
+var (
+	mc = NewClient("", []string{""})
+	xiaomisecret = ""
+)
+
+func TestIconPush(t *testing.T) {
+	res,err := mc.UploadLargeIcon("F:\\pic3_120_120.png")
+	if err != nil {
+		t.Log(err)
+		return;
+	}
+
+	XiaomiPush(res.Data.IconUrl, []string{"qyI6a+a9xtil+kvLE/tjXsbDePKy9V5rmPw1ZeVPh5Gdv44B8DemN2VVORdjta2O"})
+}
+
+
+
+
+func XiaomiPush(largeIcon string, regIds []string) {
+	id := 489464
+	name := strconv.Itoa(id)
+	message := NewAndroidMessage("中文 test"+name, "description"+name)
+	message.SetNotifyType(2)
+	message.SetPayload("nimade" + name)
+
+	message.SetLargeIconUrl(largeIcon)
+
+	message.AddExtra("_s_msgId", name+"666666666")
+
+	message.SetNotifyID(int64(id))
+	fmt.Println(message)
+
+	ctxt, _ := context.WithCancel(context.Background())
+
+	result, _ := mc.SendToList(ctxt, message, regIds)
+
+	fmt.Println(string(result))
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 var packageName string = "sbkssbkssbkssbkssbkssbkssbkssbks"
 
