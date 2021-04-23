@@ -1,7 +1,10 @@
 package xiaomipush
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -17,7 +20,24 @@ var (
 )
 
 func TestIconPush(t *testing.T) {
-	res,err := mc.UploadLargeIcon("F:\\pic3_120_120.png")
+	res,err := mc.UploadLargeIcon("F:\\pic3_120_120.png", nil)
+	if err != nil {
+		t.Log(err)
+		return;
+	}
+
+	XiaomiPush(res.Data.IconUrl, []string{"qyI6a+a9xtil+kvLE/tjXsbDePKy9V5rmPw1ZeVPh5Gdv44B8DemN2VVORdjta2O"})
+}
+
+func TestIconPushBuffer(t *testing.T) {
+
+	buf,err := httpGet("https://i.ibb.co/tPcQnJr/picx.png")
+	if err != nil {
+		t.Log(err)
+		return;
+	}
+
+	res,err := mc.UploadLargeIcon("pic3_120_120.png", buf)
 	if err != nil {
 		t.Log(err)
 		return;
@@ -28,6 +48,30 @@ func TestIconPush(t *testing.T) {
 
 
 
+func httpGet(durl string) ([]byte, error) {
+
+	client := http.DefaultClient
+	client.Timeout = time.Second * 60
+	resp, err := client.Get(durl)
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.ContentLength <= 0 {
+		return nil, errors.New("http Get rsp length <=0")
+	}
+
+	raw := resp.Body
+	defer raw.Close()
+
+	defer resp.Body.Close()
+	rspBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return rspBody, nil
+}
 
 func XiaomiPush(largeIcon string, regIds []string) {
 	id := 489464

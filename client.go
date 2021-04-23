@@ -735,12 +735,12 @@ func (m *MiPush) defaultForm(msg *Message) url.Values {
 	return form
 }
 
-func (m *MiPush) UploadLargeIcon(filename string) (*UploadResult, error) {
+func (m *MiPush) UploadLargeIcon(filename string, fileBuffer []byte) (*UploadResult, error) {
 	p := make(map[string]string)
 	p["is_global"] = "false"
 	p["is_icon"] = "true"
 
-	str := m.commonUploadRealFile(filename, ProductionHost+UploadIconURL, p)
+	str := m.commonUploadRealFile(filename, fileBuffer, ProductionHost+UploadIconURL, p)
 	var result UploadResult
 	err := json.Unmarshal([]byte(str), &result)
 	if err != nil {
@@ -753,7 +753,7 @@ func (m *MiPush) UploadLargeIcon(filename string) (*UploadResult, error) {
 
 }
 
-func (m *MiPush) commonUploadRealFile(filename, url string, params map[string]string) string {
+func (m *MiPush) commonUploadRealFile(filename string, fileBuffer []byte, url string, params map[string]string) string {
 	bufReader := new(bytes.Buffer)
 	mpWriter := multipart.NewWriter(bufReader)
 
@@ -762,7 +762,11 @@ func (m *MiPush) commonUploadRealFile(filename, url string, params map[string]st
 		mpWriter.WriteField(key, value)
 	}
 	//最后写入文件
-	constructFormFile(mpWriter, filename)
+	if fileBuffer == nil {
+		constructFormFile(mpWriter, filename)
+	} else {
+		constructFormBuffer(mpWriter, fileBuffer, filename)
+	}
 	mpWriter.Close()
 
 	req, _ := http.NewRequest("POST", url, bufReader)
@@ -782,7 +786,16 @@ func (m *MiPush) commonUploadRealFile(filename, url string, params map[string]st
 	return UrlDecode(body)
 }
 
+func constructFormBuffer(writer *multipart.Writer, fileBuffer []byte, filename string) error {
+	//推断Content-Type
+	contentType := http.DetectContentType(fileBuffer)
 
+	waitToWriteContent, _ := createFormFile(writer, contentType, "file", filename)
+	//写入文件内容
+	waitToWriteContent.Write(fileBuffer)
+
+	return nil
+}
 
 func constructFormFile(writer *multipart.Writer, filename string) error {
 	f, _ := os.Open(filename)
